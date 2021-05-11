@@ -53,4 +53,17 @@ class CityAirQualityServiceTest {
 
         assertThat(cityAirQualityService.averageIndex(city)).isNull()
     }
+
+    @Test
+    fun `should return null if pollution data is empty`() {
+        val cityName = "Barcelona"
+        val countryCode = "ES"
+        val city = City(cityName, countryCode)
+        val coordinates = GeoCoordinates(41.0, 2.0)
+        val cityGeocoded = CityGeoCoded(cityName, countryCode, coordinates)
+        whenever(cityGeocodingService.getGeoCoordinates(city)).thenReturn(cityGeocoded)
+        whenever(airQualityForecastService.getAirQualityForecast(coordinates)).thenReturn(null)
+
+        assertThat(cityAirQualityService.averageIndex(city)).isNull()
+    }
 }
