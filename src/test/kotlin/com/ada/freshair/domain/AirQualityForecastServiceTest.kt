@@ -1,8 +1,9 @@
 package com.ada.freshair.domain
 
+import arrow.core.None
+import arrow.core.Some
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNull
 import com.ada.freshair.infrastructure.api.OWMAirQualityForecastService
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -56,13 +57,13 @@ class AirQualityForecastServiceTest {
                 )
         )
 
-        val airQualityForecasts = airQualityForecastService.getAirQualityForecast(GeoCoordinates(lat, lon))
+        val forecasts = airQualityForecastService.getAirQualityForecast(GeoCoordinates(lat, lon))
 
-        assertThat(airQualityForecasts).isEqualTo(expectedAirQualityForecasts)
+        assertThat(forecasts).isEqualTo(Some(expectedAirQualityForecasts))
     }
 
     @Test
-    fun `should return null if pollution data is empty`() {
+    fun `should return none if pollution data is empty`() {
         val lat = 41.3888
         val lon = 2.159
         WireMock.stubFor(
@@ -77,6 +78,6 @@ class AirQualityForecastServiceTest {
 
         val airQualityForecasts = airQualityForecastService.getAirQualityForecast(GeoCoordinates(lat, lon))
 
-        assertThat(airQualityForecasts).isNull()
+        assertThat(airQualityForecasts).isEqualTo(None)
     }
 }

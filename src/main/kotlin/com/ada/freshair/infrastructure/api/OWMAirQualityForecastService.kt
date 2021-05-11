@@ -1,5 +1,8 @@
 package com.ada.freshair.infrastructure.api
 
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
 import com.ada.freshair.domain.AirQualityForecast
 import com.ada.freshair.domain.AirQualityForecastService
 import com.ada.freshair.domain.GeoCoordinates
@@ -26,7 +29,7 @@ class OWMAirQualityForecastService(
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    override fun getAirQualityForecast(coordinates: GeoCoordinates): List<AirQualityForecast>? {
+    override fun getAirQualityForecast(coordinates: GeoCoordinates): Option<List<AirQualityForecast>> {
         val request = HttpRequest.newBuilder()
             .uri(URL(
                 baseUrl,
@@ -38,11 +41,11 @@ class OWMAirQualityForecastService(
         val response: HttpResponse<String> = HttpClient.newHttpClient()
             .send(request, HttpResponse.BodyHandlers.ofString())
 
-        return objectMapper
-            .readValue<OMWAirQualityForecasts>(response.body())
+        val forecasts = objectMapper.readValue<OMWAirQualityForecasts>(response.body())
             .list
             .map { AirQualityForecast(it.main.aqi) }
-            .ifEmpty { null }
+
+        return if (forecasts.isEmpty()) None else Some(forecasts)
     }
 
 }
