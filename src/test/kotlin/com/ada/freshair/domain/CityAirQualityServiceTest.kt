@@ -1,15 +1,14 @@
 package com.ada.freshair.domain
 
+import arrow.core.None
+import arrow.core.Some
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.isNull
 import com.ada.freshair.infrastructure.City
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 class CityAirQualityServiceTest {
 
@@ -35,27 +34,26 @@ class CityAirQualityServiceTest {
             AirQualityForecast(2),
             AirQualityForecast(1)
         )
-        val expectedAverageAitQualityIndex = BigDecimal(1.50).setScale(2, RoundingMode.HALF_UP)
         whenever(cityGeocodingService.getGeoCoordinates(city)).thenReturn(cityGeocoded)
         whenever(airQualityForecastService.getAirQualityForecast(coordinates)).thenReturn(airQualityForecasts)
 
         val airQualityIndex = cityAirQualityService.averageIndex(city)
 
-        assertThat(airQualityIndex?.index).isEqualTo(expectedAverageAitQualityIndex)
+        assertThat(airQualityIndex).isEqualTo(Some(AirQualityIndex(cityName, 1.5)))
     }
 
     @Test
-    fun `should return null if city does not exist`() {
+    fun `should return none if city does not exist`() {
         val cityName = "Barcelona"
         val countryCode = "ES"
         val city = City(cityName, countryCode)
         whenever(cityGeocodingService.getGeoCoordinates(city)).thenReturn(null)
 
-        assertThat(cityAirQualityService.averageIndex(city)).isNull()
+        assertThat(cityAirQualityService.averageIndex(city)).isEqualTo(None)
     }
 
     @Test
-    fun `should return null if pollution data is empty`() {
+    fun `should return none if pollution data is empty`() {
         val cityName = "Barcelona"
         val countryCode = "ES"
         val city = City(cityName, countryCode)
@@ -64,6 +62,6 @@ class CityAirQualityServiceTest {
         whenever(cityGeocodingService.getGeoCoordinates(city)).thenReturn(cityGeocoded)
         whenever(airQualityForecastService.getAirQualityForecast(coordinates)).thenReturn(null)
 
-        assertThat(cityAirQualityService.averageIndex(city)).isNull()
+        assertThat(cityAirQualityService.averageIndex(city)).isEqualTo(None)
     }
 }
