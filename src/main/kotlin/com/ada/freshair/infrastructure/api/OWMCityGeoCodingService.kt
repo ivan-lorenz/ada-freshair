@@ -1,9 +1,10 @@
 package com.ada.freshair.infrastructure.api
 
-import arrow.core.Option
+import arrow.core.Either
 import com.ada.freshair.domain.CityGeoCoded
 import com.ada.freshair.domain.CityGeoCodingService
 import com.ada.freshair.domain.GeoCoordinates
+import com.ada.freshair.domain.error.ApplicationError
 import com.ada.freshair.infrastructure.City
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -27,7 +28,7 @@ class OWMCityGeoCodingService(
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    override fun getGeoCoordinates(city: City): Option<CityGeoCoded> {
+    override fun getGeoCoordinates(city: City): Either<ApplicationError, CityGeoCoded> {
         val request = HttpRequest.newBuilder()
             .uri(URL(baseUrl, "geo/1.0/direct?q=${city.name},${city.country}&limit=1&appid=${apiKey}").toURI())
             .GET()
@@ -36,7 +37,7 @@ class OWMCityGeoCodingService(
         val response: HttpResponse<String> = HttpClient.newHttpClient()
             .send(request, BodyHandlers.ofString())
 
-        return Option.fromNullable(
+        return Either.fromNullable(
             objectMapper.readValue<List<OMWCity>>(response.body())
             .map {
                 CityGeoCoded(
@@ -44,9 +45,9 @@ class OWMCityGeoCodingService(
                     city.country,
                     GeoCoordinates(it.lat, it.lon)
                 )
-            }
-            .firstOrNull()
-        )
+            }.firstOrNull()
+        ).mapLeft { ApplicationError() }
+
     }
 
 }

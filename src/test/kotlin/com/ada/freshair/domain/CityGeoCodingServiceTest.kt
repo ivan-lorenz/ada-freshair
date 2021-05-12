@@ -1,11 +1,13 @@
 package com.ada.freshair.domain
 
-import arrow.core.None
-import arrow.core.orElse
+import arrow.core.getOrHandle
+import arrow.core.left
 import assertk.assertAll
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
 import assertk.fail
+import com.ada.freshair.domain.error.ApplicationError
 import com.ada.freshair.infrastructure.City
 import com.ada.freshair.infrastructure.api.OWMCityGeoCodingService
 import com.github.tomakehurst.wiremock.WireMockServer
@@ -68,7 +70,7 @@ class CityGeoCodingServiceTest {
                     assertThat(it.countryCode).isEqualTo(cityCountry)
                     assertThat(it.coordinates).isEqualTo(GeoCoordinates(lat, lon))
                 }
-            }.orElse { fail("Should no be None.") }
+            }.getOrHandle { fail("Should no be None.") }
     }
 
     @Test
@@ -83,6 +85,6 @@ class CityGeoCodingServiceTest {
                 )
         )
 
-        assertThat(cityGeoCodingService.getGeoCoordinates(city)).isEqualTo(None)
+        assertThat(cityGeoCodingService.getGeoCoordinates(city)).isInstanceOf(ApplicationError().left()::class)
     }
 }
