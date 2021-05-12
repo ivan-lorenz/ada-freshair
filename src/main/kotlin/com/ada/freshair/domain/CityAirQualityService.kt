@@ -1,6 +1,7 @@
 package com.ada.freshair.domain
 
-import arrow.core.Option
+import arrow.core.Either
+import com.ada.freshair.domain.error.ApplicationError
 import com.ada.freshair.infrastructure.City
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -14,12 +15,12 @@ class CityAirQualityService(
     private val cityGeocodingService: CityGeoCodingService,
     private val airQualityForecastService: AirQualityForecastService
 ) {
-    fun averageIndex(city: City): Option<AirQualityIndex> =
+    fun averageIndex(city: City): Either<ApplicationError, AirQualityIndex> =
         cityGeocodingService.getGeoCoordinates(city)
             .flatMap { airQualityForecastService.getAirQualityForecast(it.coordinates) }
             .map {
                 AirQualityIndex(city.name, it
                     .map { forecast -> forecast.index }
                     .average())
-            }
+            }.toEither { ApplicationError() }
 }

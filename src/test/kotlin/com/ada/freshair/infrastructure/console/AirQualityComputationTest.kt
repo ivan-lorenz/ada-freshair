@@ -1,12 +1,13 @@
 package com.ada.freshair.infrastructure.console
 
-import arrow.core.None
-import arrow.core.Some
+import arrow.core.left
+import arrow.core.right
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import com.ada.freshair.domain.AirQualityIndex
 import com.ada.freshair.domain.CityAirQualityService
+import com.ada.freshair.domain.error.ApplicationError
 import com.ada.freshair.infrastructure.City
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -47,7 +48,7 @@ class AirQualityComputationTest {
         val index = 1.50
         val expectedIndex = BigDecimal(index).setScale(2, RoundingMode.HALF_UP)
         whenever(cityAirQualityService.averageIndex(City(city, country)))
-            .thenReturn(Some(AirQualityIndex(city, index)))
+            .thenReturn(AirQualityIndex(city, index).right())
 
         airQualityComputation.compute(cities)
 
@@ -60,7 +61,7 @@ class AirQualityComputationTest {
         val city = "Barcelona"
         val country = "ES"
         val cities = listOf("$city,$country")
-        whenever(cityAirQualityService.averageIndex(City(city, country))).thenReturn(None)
+        whenever(cityAirQualityService.averageIndex(City(city, country))).thenReturn(ApplicationError().left())
 
         airQualityComputation.compute(cities)
 

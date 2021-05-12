@@ -2,8 +2,12 @@ package com.ada.freshair.domain
 
 import arrow.core.None
 import arrow.core.Some
+import arrow.core.left
+import arrow.core.right
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import com.ada.freshair.domain.error.ApplicationError
 import com.ada.freshair.infrastructure.City
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -39,7 +43,7 @@ class CityAirQualityServiceTest {
 
         val airQualityIndex = cityAirQualityService.averageIndex(city)
 
-        assertThat(airQualityIndex).isEqualTo(Some(AirQualityIndex(cityName, 1.5)))
+        assertThat(airQualityIndex).isEqualTo(AirQualityIndex(cityName, 1.5).right())
     }
 
     @Test
@@ -49,7 +53,7 @@ class CityAirQualityServiceTest {
         val city = City(cityName, countryCode)
         whenever(cityGeocodingService.getGeoCoordinates(city)).thenReturn(None)
 
-        assertThat(cityAirQualityService.averageIndex(city)).isEqualTo(None)
+        assertThat(cityAirQualityService.averageIndex(city)).isInstanceOf(ApplicationError().left()::class)
     }
 
     @Test
@@ -62,6 +66,6 @@ class CityAirQualityServiceTest {
         whenever(cityGeocodingService.getGeoCoordinates(city)).thenReturn(Some(cityGeocoded))
         whenever(airQualityForecastService.getAirQualityForecast(coordinates)).thenReturn(None)
 
-        assertThat(cityAirQualityService.averageIndex(city)).isEqualTo(None)
+        assertThat(cityAirQualityService.averageIndex(city)).isInstanceOf(ApplicationError().left()::class.java)
     }
 }
