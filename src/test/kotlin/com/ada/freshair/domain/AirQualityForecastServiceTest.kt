@@ -1,9 +1,11 @@
 package com.ada.freshair.domain
 
-import arrow.core.None
-import arrow.core.Some
+import arrow.core.left
+import arrow.core.right
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import com.ada.freshair.domain.error.ApplicationError
 import com.ada.freshair.infrastructure.api.OWMAirQualityForecastService
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -59,7 +61,7 @@ class AirQualityForecastServiceTest {
 
         val forecasts = airQualityForecastService.getAirQualityForecast(GeoCoordinates(lat, lon))
 
-        assertThat(forecasts).isEqualTo(Some(expectedAirQualityForecasts))
+        assertThat(forecasts).isEqualTo(expectedAirQualityForecasts.right())
     }
 
     @Test
@@ -78,6 +80,6 @@ class AirQualityForecastServiceTest {
 
         val airQualityForecasts = airQualityForecastService.getAirQualityForecast(GeoCoordinates(lat, lon))
 
-        assertThat(airQualityForecasts).isEqualTo(None)
+        assertThat(airQualityForecasts).isInstanceOf(ApplicationError().left()::class)
     }
 }

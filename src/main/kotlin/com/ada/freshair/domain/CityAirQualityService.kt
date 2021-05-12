@@ -18,7 +18,7 @@ class CityAirQualityService(
 ) {
     fun averageIndex(city: City): Either<ApplicationError, AirQualityIndex> =
         cityGeocodingService.getGeoCoordinates(city)
-            .flatMap { airQualityForecastService.getAirQualityForecast(it.coordinates).toEither { ApplicationError() } }
+            .flatMap { airQualityForecastService.getAirQualityForecast(it.coordinates) }
             .map {
                 AirQualityIndex(city.name, it
                     .map { forecast -> forecast.index }

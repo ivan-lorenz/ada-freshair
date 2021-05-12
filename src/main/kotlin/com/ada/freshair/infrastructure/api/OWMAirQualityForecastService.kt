@@ -1,11 +1,12 @@
 package com.ada.freshair.infrastructure.api
 
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.Some
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.ada.freshair.domain.AirQualityForecast
 import com.ada.freshair.domain.AirQualityForecastService
 import com.ada.freshair.domain.GeoCoordinates
+import com.ada.freshair.domain.error.ApplicationError
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -29,7 +30,7 @@ class OWMAirQualityForecastService(
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    override fun getAirQualityForecast(coordinates: GeoCoordinates): Option<List<AirQualityForecast>> {
+    override fun getAirQualityForecast(coordinates: GeoCoordinates): Either<ApplicationError, List<AirQualityForecast>> {
         val request = HttpRequest.newBuilder()
             .uri(URL(
                 baseUrl,
@@ -45,7 +46,7 @@ class OWMAirQualityForecastService(
             .list
             .map { AirQualityForecast(it.main.aqi) }
 
-        return if (forecasts.isEmpty()) None else Some(forecasts)
+        return if (forecasts.isEmpty()) ApplicationError().left() else forecasts.right()
     }
 
 }
