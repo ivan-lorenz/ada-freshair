@@ -1,5 +1,6 @@
 package com.ada.freshair.infrastructure.api
 
+import arrow.core.Option
 import com.ada.freshair.domain.CityGeoCoded
 import com.ada.freshair.domain.CityGeoCodingService
 import com.ada.freshair.domain.GeoCoordinates
@@ -26,7 +27,7 @@ class OWMCityGeoCodingService(
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    override fun getGeoCoordinates(city: City): CityGeoCoded? {
+    override fun getGeoCoordinates(city: City): Option<CityGeoCoded> {
         val request = HttpRequest.newBuilder()
             .uri(URL(baseUrl, "geo/1.0/direct?q=${city.name},${city.country}&limit=1&appid=${apiKey}").toURI())
             .GET()
@@ -35,14 +36,17 @@ class OWMCityGeoCodingService(
         val response: HttpResponse<String> = HttpClient.newHttpClient()
             .send(request, BodyHandlers.ofString())
 
-        val omwCity: List<OMWCity> = objectMapper.readValue(response.body())
-
-        return omwCity
-            .map { CityGeoCoded(
-                city.name,
-                city.country,
-                GeoCoordinates( it.lat, it.lon)) }
+        return Option.fromNullable(
+            objectMapper.readValue<List<OMWCity>>(response.body())
+            .map {
+                CityGeoCoded(
+                    city.name,
+                    city.country,
+                    GeoCoordinates(it.lat, it.lon)
+                )
+            }
             .firstOrNull()
+        )
     }
 
 }

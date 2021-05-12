@@ -1,6 +1,5 @@
 package com.ada.freshair.domain
 
-import arrow.core.None
 import arrow.core.Option
 import com.ada.freshair.infrastructure.City
 import java.math.BigDecimal
@@ -15,13 +14,12 @@ class CityAirQualityService(
     private val cityGeocodingService: CityGeoCodingService,
     private val airQualityForecastService: AirQualityForecastService
 ) {
-    fun averageIndex(city: City): Option<AirQualityIndex> {
-        val (_, _, coordinates) = cityGeocodingService.getGeoCoordinates(city) ?: return None
-        return airQualityForecastService.getAirQualityForecast(coordinates)
-            .map { AirQualityIndex(city.name, it
+    fun averageIndex(city: City): Option<AirQualityIndex> =
+        cityGeocodingService.getGeoCoordinates(city)
+            .flatMap { airQualityForecastService.getAirQualityForecast(it.coordinates) }
+            .map {
+                AirQualityIndex(city.name, it
                     .map { forecast -> forecast.index }
                     .average())
             }
-    }
-
 }
