@@ -3,7 +3,7 @@ package com.ada.freshair.domain
 import assertk.assertAll
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import assertk.assertions.prop
+import assertk.assertions.isNull
 import com.ada.freshair.infrastructure.City
 import com.ada.freshair.infrastructure.api.OWMCityGeoCodingService
 import com.github.tomakehurst.wiremock.WireMockServer
@@ -62,9 +62,24 @@ class CityGeoCodingServiceTest {
         val geoCodedCity = cityGeoCodingService.getGeoCoordinates(city)
 
         assertAll {
-            assertThat(geoCodedCity).prop(CityGeoCoded::name).isEqualTo(cityName)
-            assertThat(geoCodedCity).prop(CityGeoCoded::countryCode).isEqualTo(cityCountry)
-            assertThat(geoCodedCity).prop(CityGeoCoded::coordinates).isEqualTo(GeoCoordinates(lat, lon))
+            assertThat(geoCodedCity?.name).isEqualTo(cityName)
+            assertThat(geoCodedCity?.countryCode).isEqualTo(cityCountry)
+            assertThat(geoCodedCity?.coordinates).isEqualTo(GeoCoordinates(lat, lon))
         }
+    }
+
+    @Test
+    fun `should return null when city does not exist`() {
+        val cityName = "Barcelona"
+        val cityCountry = "ES"
+        val city = City(name = cityName, country = cityCountry)
+        stubFor(
+            get("/geo/1.0/direct?q=$cityName,$cityCountry&limit=1&appid=$apiKey")
+                .willReturn(aResponse()
+                    .withBody("""[]""")
+                )
+        )
+
+        assertThat(cityGeoCodingService.getGeoCoordinates(city)).isNull()
     }
 }
